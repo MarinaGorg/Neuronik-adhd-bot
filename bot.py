@@ -48,6 +48,7 @@ logging.basicConfig(level=logging.INFO)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [["1", "2"], ["3", "4"], ["5"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+
     intro = (
         "Привет, я Нейроник — СДВГ-коуч с геймификацией и котиковым вайбом.\n"
         "Давай посмотрим, с чего можно начать или что мешает включиться.\n"
@@ -59,20 +60,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "5. Хочу сделать кое-что импульсивное, но сомневаюсь, стоит ли\n\n"
         "(Выбери цифру или напиши своё)"
     )
-    await update.message.reply_text(intro, reply_markup=reply_markup)
 
-# === ОТВЕТ ОТ GPT ===
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    intro = (
-        "Привет, я Нейроник — СДВГ-коуч с геймификацией и котиковым вайбом.\n"
-        "Что у тебя прямо сейчас:\n\n"
-        "1. Прокрастинирую, не могу начать задачу\n"
-        "2. Чувствую себя перегруженным\n"
-        "3. Всё хорошо, хочу спланировать день\n"
-        "4. Хочу сделать кое-что импульсивное, но сомневаюсь"
-        "\n\n(Просто отправь цифру или свой текст)"
-    )
-    await update.message.reply_text(intro)
+await update.message.reply_text(intro, reply_markup=reply_markup)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
