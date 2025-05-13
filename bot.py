@@ -71,7 +71,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         {"role": "user", "content": user_message}
     ]
 
-try:
+    try:
         response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=messages,
@@ -79,9 +79,10 @@ try:
             max_tokens=800,
         )
         reply = response.choices[0].message.content
-except Exception as e:
+    except Exception as e:
         logging.error(e)
         await update.message.reply_text("Ой! Что-то пошло не так. Попробуй ещё раз чуть позже.")
         return
 
-await update.message.reply_text(reply)
+    await update.message.reply_text(reply)
+
