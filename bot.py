@@ -65,7 +65,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(intro, reply_markup=reply_markup) 
 
-async def handle_message(
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
   
 MEMORY_FILE = "memory.json"
 MEMORY_LIFETIME = 86400  # 1 день в секундах
