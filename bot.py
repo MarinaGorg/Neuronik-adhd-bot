@@ -96,9 +96,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(reply)
 
-
-    await update.message.reply_text(reply)
-
 from telegram.ext import CommandHandler, MessageHandler, filters
 
 application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
