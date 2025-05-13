@@ -61,29 +61,41 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "(Выбери цифру или напиши своё)"
     )
 
-await update.message.reply_text(intro, reply_markup=reply_markup)
+    await update.message.reply_text(intro, reply_markup=reply_markup) 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     logging.info(f"User: {user_message}")
 
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_message}
-    ]
+    if user_message == "1":
+        reply = "Понял! Давай разгоним прокрастинацию. Напиши, какую задачу ты прокрастинируешь?"
+    elif user_message == "2":
+        reply = "Похоже, ты застрял. Попробуем сделать мозговой штурм вместе! Выбери дело, которое сегодня точно, 100% надо сделать и напиши мне его сюда."
+    elif user_message == "3":
+        reply = "Класс! Тогда давай выберем, с чего начать — утро, обед или вечер?"
+    elif user_message == "4":
+        reply = "Ты не один! Давай найдем, где можно немного отпустить и восстановиться."
+    elif user_message == "5":
+        reply = "Импульсивность — суперсила, если правильно направить. Хочешь, вместе обдумаем последствия?"
+    else:
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_message}
+        ]
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=800,
+            )
+            reply = response.choices[0].message.content
+        except Exception as e:
+            logging.error(e)
+            reply = "Ой! Что-то пошло не так. Попробуй ещё раз чуть позже."
 
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=messages,
-            temperature=0.7,
-            max_tokens=800,
-        )
-        reply = response.choices[0].message.content
-    except Exception as e:
-        logging.error(e)
-        await update.message.reply_text("Ой! Что-то пошло не так. Попробуй ещё раз чуть позже.")
-        return
+    await update.message.reply_text(reply)
+
 
     await update.message.reply_text(reply)
 
