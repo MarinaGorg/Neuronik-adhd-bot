@@ -1,6 +1,9 @@
 import logging
 import os
 import openai
+import json
+import os
+import time
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -63,9 +66,46 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(intro, reply_markup=reply_markup) 
 
+async def handle_message(import json
+import os
+import time
+
+MEMORY_FILE = "memory.json"
+MEMORY_LIFETIME = 86400  # 1 день в секундах
+
+def load_memory():
+    if not os.path.exists(MEMORY_FILE):
+        return {}
+    with open(MEMORY_FILE, "r", encoding="utf-8") as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            return {}
+    now = time.time()
+    return {
+        uid: [msg for msg in history if now - msg["ts"] < MEMORY_LIFETIME]
+        for uid, history in data.items()
+    }
+
+def save_memory(memory):
+    serializable = {
+        uid: [{"role": m["role"], "content": m["content"], "ts": m["ts"]} for m in history]
+        for uid, history in memory.items()
+    }
+    with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(serializable, f, ensure_ascii=False, indent=2)
+
+memory = load_memory()
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
     user_message = update.message.text
-    logging.info(f"User: {user_message}")
+    logging.info(f"User {user_id}: {user_message}")
+
+    if user_id not in memory:
+        memory[user_id] = []
+
+    memory[user_id].append({"role": "user", "content": user_message, "ts": time.time()})
 
     if user_message == "1":
         reply = "Понял! Давай разгоним прокрастинацию. Напиши, какую задачу ты прокрастинируешь?"
@@ -78,10 +118,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif user_message == "5":
         reply = "Импульсивность — суперсила, если правильно направить. Хочешь, вместе обдумаем последствия?"
     else:
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_message}
-        ]
+        messages = (
+            [{"role": "system", "content": SYSTEM_PROMPT}]
+            + [{"role": m["role"], "content": m["content"]} for m in memory[user_id]]
+        )
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-4o",
@@ -94,7 +134,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logging.error(e)
             reply = "Ой! Что-то пошло не так. Попробуй ещё раз чуть позже."
 
+    memory[user_id].append({"role": "assistant", "content": reply, "ts": time.time()})
+    save_memory(memory)
+
     await update.message.reply_text(reply)
+
 
 from telegram.ext import CommandHandler, MessageHandler, filters
 
