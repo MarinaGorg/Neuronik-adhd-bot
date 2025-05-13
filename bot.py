@@ -1,9 +1,8 @@
-import logging
-import os
-import openai
 import json
-import os
 import time
+import os
+import logging
+import openai
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
