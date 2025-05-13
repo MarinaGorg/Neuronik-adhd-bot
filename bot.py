@@ -71,7 +71,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         {"role": "user", "content": user_message}
     ]
 
-       try:
+try:
         response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=messages,
