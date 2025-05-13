@@ -62,6 +62,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(intro, reply_markup=reply_markup)
 
 # === ОТВЕТ ОТ GPT ===
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    intro = (
+        "Привет, я Нейроник — СДВГ-коуч с геймификацией и котиковым вайбом.\n"
+        "Что у тебя прямо сейчас:\n\n"
+        "1. Прокрастинирую, не могу начать задачу\n"
+        "2. Чувствую себя перегруженным\n"
+        "3. Всё хорошо, хочу спланировать день\n"
+        "4. Хочу сделать кое-что импульсивное, но сомневаюсь"
+        "\n\n(Просто отправь цифру или свой текст)"
+    )
+    await update.message.reply_text(intro)
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     logging.info(f"User: {user_message}")
@@ -86,3 +98,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(reply)
 
+from telegram.ext import CommandHandler, MessageHandler, filters
+
+application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+application.add_handler(CommandHandler("start", start))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+if __name__ == "__main__":
+    application.run_polling()
