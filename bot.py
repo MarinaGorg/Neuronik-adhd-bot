@@ -11,6 +11,9 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")  # вставь сюда токен
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")   # вставь сюда свой OpenAI API ключ
 openai.api_key = OPENAI_API_KEY
 
+MEMORY_FILE = "memory.json"
+MEMORY_LIFETIME = 86400  # 1 день в секундах
+
 # === СИСТЕМНОЕ СООБЩЕНИЕ (промпт) ===
 SYSTEM_PROMPT = """
 Ты — персональный adhd coach. Я человек с СДВГ, и мне нужна твоя помощь, чтобы справляться с задачами, прокрастинацией, импульсивностью и другими трудностями исполнительных функций.
@@ -66,9 +69,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(intro, reply_markup=reply_markup) 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  MEMORY_FILE = "memory.json"
-  MEMORY_LIFETIME = 86400  # 1 день в секундах
-
+  
 def load_memory():
     if not os.path.exists(MEMORY_FILE):
         return {}
