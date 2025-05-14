@@ -67,8 +67,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(intro, reply_markup=reply_markup) 
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
   
 def load_memory():
     if not os.path.exists(MEMORY_FILE):
