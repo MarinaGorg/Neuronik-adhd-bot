@@ -9,7 +9,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 # === НАСТРОЙКИ ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")  # вставь сюда токен от BotFather или задай через переменную окружения
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")   # вставь сюда свой OpenAI API ключ
-openai.api_key = OPENAI_API_KEY
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 MEMORY_FILE = "memory.json"
 MEMORY_LIFETIME = 86400  # 1 день в секундах
@@ -117,7 +117,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             + [{"role": m["role"], "content": m["content"]} for m in memory[user_id]]
         )
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
                 temperature=0.7,
