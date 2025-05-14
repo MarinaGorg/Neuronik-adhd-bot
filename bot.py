@@ -92,12 +92,12 @@ def save_memory(memory):
     with open(MEMORY_FILE, "w", encoding="utf-8") as f:
         json.dump(serializable, f, ensure_ascii=False, indent=2)
 
-memory = load_memory()
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     user_message = update.message.text
     logging.info(f"User {user_id}: {user_message}")
+
+    memory = load_memory()
 
     if user_id not in memory:
         memory[user_id] = []
