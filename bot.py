@@ -101,7 +101,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         memory[user_id] = []
 
     memory[user_id].append({"role": "user", "content": user_message, "ts": time.time()})
-
     if user_message == "1":
         reply = "Понял! Давай разгоним прокрастинацию. Напиши, какую задачу ты прокрастинируешь?"
     elif user_message == "2":
