@@ -12,7 +12,30 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")   # вставь сюда свой 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 MEMORY_FILE = "memory.json"
-MEMORY_LIFETIME = 86400  # 1 день в секундах
+MEMORY_LIFETIME = 86400  # 24 часа в секундах
+
+def load_memory():
+    if not os.path.exists(MEMORY_FILE):
+        return {}
+    with open(MEMORY_FILE, "r", encoding="utf-8") as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            return {}
+    now = time.time()
+    return {
+        uid: [msg for msg in history if now - msg["ts"] < MEMORY_LIFETIME]
+        for uid, history in data.items()
+    }
+
+def save_memory(memory):
+    serializable = {
+        uid: [{"ts": msg.get("ts", time.time()), "role": msg["role"], "content": msg["content"]}
+              for msg in history]
+        for uid, history in memory.items()
+    }
+    with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(serializable, f, ensure_ascii=False, indent=2)
 
 # === СИСТЕМНОЕ СООБЩЕНИЕ (промпт) ===
 SYSTEM_PROMPT = """
@@ -112,28 +135,45 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = "Ты не один! Давай найдем, где можно немного отпустить и восстановиться."
     elif user_message == "5":
         reply = "Импульсивность — суперсила, если правильно направить. Хочешь, вместе обдумаем последствия?"
-    else:
-        messages = (
-            [{"role": "system", "content": SYSTEM_PROMPT}]
-            + [{"role": m["role"], "content": m["content"]} for m in memory[user_id]]
-        )
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-                temperature=0.7,
-                max_tokens=800,
-            )
-            reply = response.choices[0].message.content
-        except Exception as e:
-            logging.error(e)
-            reply = "Ой! Что-то пошло не так. Попробуй ещё раз чуть позже."
+   else:
+    memory = load_memory()
+    user_history = memory.get(user_id, [])
 
-    memory[user_id].append({"role": "assistant", "content": reply, "ts": time.time()})
+    # Добавляем сообщение пользователя
+    user_history.append({
+        "role": "user",
+        "content": user_message,
+        "ts": time.time()
+    })
+
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + [
+        {"role": m["role"], "content": m["content"]} for m in user_history
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=800,
+        )
+        reply = response.choices[0].message.content
+    except Exception as e:
+        logging.error(f"OpenAI error: {e}")
+        await update.message.reply_text("⚠️ Ой! Что-то пошло не так. Попробуй ещё раз чуть позже.")
+        return
+
+    # Добавляем ответ бота
+    user_history.append({
+        "role": "assistant",
+        "content": reply,
+        "ts": time.time()
+    })
+
+    memory[user_id] = user_history
     save_memory(memory)
 
     await update.message.reply_text(reply)
-
 
 from telegram.ext import CommandHandler, MessageHandler, filters
 
