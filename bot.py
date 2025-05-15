@@ -143,6 +143,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + [
             {"role": m["role"], "content": m["content"]} for m in user_history
         ]
+
         try:
             response = client.chat.completions.create(
                 model="gpt-4o",
@@ -162,7 +163,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "ts": time.time()
         })
 
-    # Обновляем память и сохраняем
     memory[user_id] = user_history
     save_memory(memory)
 
