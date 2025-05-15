@@ -120,11 +120,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(f"User {user_id}: {user_message}")
 
     memory = load_memory()
+    user_history = memory.get(user_id, [])
 
-    if user_id not in memory:
-        memory[user_id] = []
+    # Добавляем сообщение пользователя
+    user_history.append({
+        "role": "user",
+        "content": user_message,
+        "ts": time.time()
+    })
 
-    memory[user_id].append({"role": "user", "content": user_message, "ts": time.time()})
     if user_message == "1":
         reply = "Понял! Давай разгоним прокрастинацию. Напиши, какую задачу ты прокрастинируешь?"
     elif user_message == "2":
@@ -135,41 +139,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = "Ты не один! Давай найдем, где можно немного отпустить и восстановиться."
     elif user_message == "5":
         reply = "Импульсивность — суперсила, если правильно направить. Хочешь, вместе обдумаем последствия?"
-   else:
-    memory = load_memory()
-    user_history = memory.get(user_id, [])
+    else:
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + [
+            {"role": m["role"], "content": m["content"]} for m in user_history
+        ]
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=800,
+            )
+            reply = response.choices[0].message.content
+        except Exception as e:
+            logging.error(f"OpenAI error: {e}")
+            await update.message.reply_text("⚠️ Ой! Что-то пошло не так. Попробуй ещё раз чуть позже.")
+            return
 
-    # Добавляем сообщение пользователя
-    user_history.append({
-        "role": "user",
-        "content": user_message,
-        "ts": time.time()
-    })
+        user_history.append({
+            "role": "assistant",
+            "content": reply,
+            "ts": time.time()
+        })
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + [
-        {"role": m["role"], "content": m["content"]} for m in user_history
-    ]
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            temperature=0.7,
-            max_tokens=800,
-        )
-        reply = response.choices[0].message.content
-    except Exception as e:
-        logging.error(f"OpenAI error: {e}")
-        await update.message.reply_text("⚠️ Ой! Что-то пошло не так. Попробуй ещё раз чуть позже.")
-        return
-
-    # Добавляем ответ бота
-    user_history.append({
-        "role": "assistant",
-        "content": reply,
-        "ts": time.time()
-    })
-
+    # Обновляем память и сохраняем
     memory[user_id] = user_history
     save_memory(memory)
 
